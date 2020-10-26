@@ -1,0 +1,11 @@
+- Tools
+    - Pencil
+    - Rectangle shape
+    - Ellipse shape
+    - Bucket
+    - Line
+    - Eyedropper
+- Functions
+    - New
+    - Save
+    - Open

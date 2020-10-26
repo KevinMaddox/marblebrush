@@ -1,0 +1,85 @@
+#marblebrush * {
+    box-sizing: border-box;
+}
+
+#marblebrush-toolbar {
+    display: flex;
+}
+
+#marblebrush-toolbar div {
+    height: 24px;
+    width: 24px;
+    background-repeat: no-repeat;
+    background-position: center;
+    cursor: pointer;
+}
+
+
+/* -- THEME CSS: BREAK INTO SEPARATE FILE WHEN DONE!!!! -- */
+#marblebrush {
+    border: 1px solid #808080;
+    width: 320px;
+    padding: 8px;
+}
+
+#marblebrush * {
+    font-family: Tahoma;
+    font-size: 11px;
+    padding: 0;
+    margin: 0;
+}
+
+#marblebrush-canvas {
+    background: #e8e8e8;
+    display: block;
+}
+
+#marblebrush-toolbar {
+    background: #e8e8e8;
+}
+
+#marblebrush-toolbar div {
+    margin: 0 2px;
+}
+
+#marblebrush-toolbar div:first-child {
+    margin-left: 0;
+}
+
+#marblebrush-toolbar div:last-child {
+    margin-right: 0;
+}
+
+#marblebrush-toolbar div:hover {
+    background-color: #c0c0c0;
+}
+
+#marblebrush hr {
+    border: 0;
+    border-top: 1px solid #808080;
+    margin: 8px 0;
+}
+
+
+/* -- USERSTYLE CSS: REMOVE ME WHEN DONE!!!! -- */
+* {
+    font-family: Tahoma;
+}
+
+body {
+    background: #e8e8e8;
+}
+
+h1 {
+    margin: 0.75rem 0;
+    border-bottom: 1px dotted #a0a0a0;
+    text-align: left;
+}
+
+.wrapper {
+    width: 480px;
+    background: #ffffff;
+    padding: 8px;
+    margin: 0 auto;
+    text-align: center;
+}
