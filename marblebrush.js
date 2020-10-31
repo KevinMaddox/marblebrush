@@ -1,19 +1,38 @@
+'use strict';
+if ((eval("var __temp = null"), (typeof __temp === "undefined")))
+    console.log('Notice: Strict mode is enabled.');
+
 class Marblebrush {
-    canvasElem;
-    canvas;
+    TOOLS;        // The tools available for use.
+    STATES;       // The possible states that a tool can be in.
     
-    mouseDown;
-    xThen;
-    yThen;
-    xNow;
-    yNow;
+    canvasElem;   // The HTML element of the canvas.
+    canvas;       // The context of the canvas, for actual image operations.
     
-    currentEvent;
+    mouse;        // Contains info for mouse's positions & left-click state.
     
-    selectedTool;
+    currentEvent; // Used for getting mouse position at any time.
+    
+    tool;         // The active tool in use.
+    state;        // The state of the active tool.
     
     constructor() {
-        var container = document.getElementById('marblebrush');
+        this.TOOLS = {
+            PENCIL:   'pencil',
+            BUCKET:   'bucket',
+            POLYGON: 'polygon'
+        };
+        
+        this.STATES = {
+            READY:    0,
+            BEGIN:    1,
+            ACTIVE:   2,
+            INACTIVE: 3,
+            DONE:     4
+        };
+        
+        // TODO: Redo "properly?"
+        let container = document.getElementById('marblebrush');
         container.innerHTML +=
             '<div id="marblebrush-titlebar">Marblebrush v0.3</div>'
           + '<hr>'
@@ -26,17 +45,22 @@ class Marblebrush {
         ;
         
         this.canvasElem = document.getElementById('marblebrush-canvas');
+        if (!this.canvasElem || this.canvasElem.nodeName !== 'CANVAS')
+            return;
         this.canvas  = this.canvasElem.getContext('2d');
         
-        this.mouseDown = false;
+        this.mouse = {
+            clicked: false,
+            isDown:  false,
+            isUp:    false,
+            lastX:       0,
+            lastY:       0,
+            x:           0,
+            y:           0
+        };
 
-        this.xThen = 0;
-        this.yThen = 0;
-        this.xNow = 0;
-        this.yNow = 0;
-
-        this.lastEvent = null;
-        
+        this.switchTool(this.TOOLS.PENCIL);
+        this.state = this.STATES.READY;
     }
     
     handleMouse(event) {
@@ -46,22 +70,41 @@ class Marblebrush {
             case 'mousedown':
                 if (event.button !== 0)
                     return;
-                this.mouseDown = true;
-                this.xThen = this.getX();
-                this.yThen = this.getY();
+                
+                this.mouse.clicked = true;
+                this.mouse.isDown = true;
+                this.mouse.x  = this.getX();
+                this.mouse.y  = this.getY();
+                this.mouse.lastX = this.mouse.x;
+                this.mouse.lastY = this.mouse.y;
+                
+                if (this.state === this.STATES.READY)
+                    this.state = this.STATES.BEGIN;
+                
+                this.processTool();
+                
+                this.mouse.clicked = false;
                 break;
             case 'mousemove':
-                this.xNow = this.getX();
-                this.yNow = this.getY();
-                if (this.mouseDown)
-                    this.drawLine();
-                this.xThen = this.xNow;
-                this.yThen = this.yNow;
+                this.mouse.x  = this.getX();
+                this.mouse.y  = this.getY();
+                if (this.mouse.isDown)
+                    this.processTool();
+                this.mouse.lastX = this.mouse.x;
+                this.mouse.lastY = this.mouse.y;
                 break;
             case 'mouseup':
                 if (event.button !== 0)
                     return;
-                this.mouseDown = false;
+                this.mouse.isDown = false;
+                break;
+        }
+    }
+    
+    processTool() {
+        switch (this.tool) {
+            case this.TOOLS.PENCIL:
+                this.drawLine();
                 break;
         }
     }
@@ -75,17 +118,24 @@ class Marblebrush {
     }
     
     switchTool(tool) {
-        this.selectedTool = tool;
+        // If tool is in the midst of operations, then we demand it finishes
+        // what it's doing and cleans itself up.
+        if (this.state !== this.STATES.READY) {
+            this.state = this.STATES.DONE;
+            this.processTool();
+        }
         
+        this.tool = tool;
         switch (tool) {
-            case 'pencil':
+            case this.TOOLS.PENCIL:
                 
                 break;
-            case 'bucket':
+            case this.TOOLS.BUCKET:
                 
                 break;
         }
         
+        // Set cursor icon.
         this.canvasElem.style.cursor = 'url("res/cursor/' + tool + '.png"), auto';
     }
     
@@ -96,8 +146,8 @@ class Marblebrush {
         
         this.canvas.beginPath();
         
-        this.canvas.moveTo(this.xThen, this.yThen);
-        this.canvas.lineTo(this.xNow , this.yNow);
+        this.canvas.moveTo(this.mouse.lastX, this.mouse.lastY);
+        this.canvas.lineTo(this.mouse.x , this.mouse.y);
         
         this.canvas.closePath();
         this.canvas.stroke();
@@ -106,10 +156,9 @@ class Marblebrush {
     render() {
         
     }
-
 }
 
-var marblebrush = new Marblebrush();
+let marblebrush = new Marblebrush();
 
 // - Add event handlers for canvas interaction. --------------------------------
 marblebrush.canvasElem.addEventListener('mousedown', function(event) {
@@ -126,10 +175,9 @@ document.addEventListener('mouseup', function(event) {
 
 
 // - Add event handlers to the tool buttons. -----------------------------------
-var tools = document.getElementsByClassName('marblebrush-tool');
-for (var i = 0; i < tools.length; i++) {
+let tools = document.getElementsByClassName('marblebrush-tool');
+for (let i = 0; i < tools.length; i++) {
     tools[i].addEventListener('click', function(event) {
         marblebrush.switchTool(this.dataset.name);
     });
 }
-
