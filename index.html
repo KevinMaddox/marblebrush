@@ -4,8 +4,31 @@
 <head>
     <title>PAINT</title>
     <meta charset="utf-8">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="marblebrush.css">
     <link rel="stylesheet" href="../micawatcher/src/micawatcher.css">
+    <style type="text/css">
+        * {
+            font-family: Tahoma;
+        }
+
+        body {
+            background: #e8e8e8;
+        }
+
+        h1 {
+            margin: 0.75rem 0;
+            border-bottom: 1px dotted #a0a0a0;
+            text-align: left;
+        }
+
+        .wrapper {
+            width: 480px;
+            background: #ffffff;
+            padding: 8px;
+            margin: 0 auto;
+            text-align: center;
+        }
+    </style>
 </head>
 
 <body>
@@ -17,7 +40,12 @@
     <script type="text/javascript" src="marblebrush.js"></script>
     <script type="text/javascript" src="../micawatcher/src/micawatcher.js"></script>
     <script type="text/javascript">
-        var myCoolVar = 'cool';
+        
+        let marblebrush = new MarbleBrush({
+            
+        });
+        
+        
         var watcher = new MicaWatcher(true, {
             'x': 260,
             'height': 600

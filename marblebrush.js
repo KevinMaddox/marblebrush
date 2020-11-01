@@ -2,7 +2,8 @@
 if ((eval("var __temp = null"), (typeof __temp === "undefined")))
     console.log('Notice: Strict mode is enabled.');
 
-class Marblebrush {
+class MarbleBrush {
+    APP;          // General-use data pertaining to the app.
     TOOLS;        // The tools available for use.
     STATES;       // The possible states that a tool can be in.
     
@@ -11,15 +12,22 @@ class Marblebrush {
     
     mouse;        // Contains info for mouse's positions & left-click state.
     
-    currentEvent; // Used for getting mouse position at any time.
-    
     tool;         // The active tool in use.
     state;        // The state of the active tool.
     
-    constructor() {
+    constructor(options = {}) {
+        // - Initialize data and variables. ------------------------------------
+        this.APP = {
+            VERSION: '0.3',
+            PATH: {
+                ICON:   'res/tool-icon/',
+                CURSOR: 'res/cursor/'
+            }
+        };
+        
         this.TOOLS = {
-            PENCIL:   'pencil',
-            BUCKET:   'bucket',
+            PENCIL:  'pencil',
+            BUCKET:  'bucket',
             POLYGON: 'polygon'
         };
         
@@ -31,50 +39,135 @@ class Marblebrush {
             DONE:     4
         };
         
-        // TODO: Redo "properly?"
-        let container = document.getElementById('marblebrush');
-        container.innerHTML +=
-            '<div id="marblebrush-titlebar">Marblebrush v0.3</div>'
-          + '<hr>'
-          + '<canvas id="marblebrush-canvas" width="320" height="240"></canvas>'
-          + '<hr>'
-          + '<div id="marblebrush-toolbar">'
-          +     '<div class="marblebrush-tool" style="background-image:url(\'res/tool-icon/pencil.png\')" data-name="pencil"></div>'
-          +     '<div class="marblebrush-tool" style="background-image:url(\'res/tool-icon/disk.png\'  )" data-name="bucket"></div>'
-          + '</div>'
-        ;
-        
-        this.canvasElem = document.getElementById('marblebrush-canvas');
-        if (!this.canvasElem || this.canvasElem.nodeName !== 'CANVAS')
-            return;
-        this.canvas  = this.canvasElem.getContext('2d');
-        
         this.mouse = {
-            clicked: false,
-            isDown:  false,
-            isUp:    false,
+            wasPressed:  false,
+            wasReleased: false,
+            isHeld:      false,
             lastX:       0,
             lastY:       0,
             x:           0,
             y:           0
         };
         
+        // - Validate configuration options. -----------------------------------
+        // List of valid options, their types, and their default values.
+        let validOptions = {
+            'name': ['string' , `MarbleBrush v${this.APP.VERSION}`]
+        }
+        
+        for (const key in options) {
+            // Ensure key is allowed.
+            if (!validOptions.hasOwnProperty(key)) {
+                this.report('Warning', `Invalid option "${key}".`);
+                continue;
+            }
+            
+            // Ensure value is of a valid type.
+            if (typeof options[key] !== validOptions[key][0]) {
+                this.report(
+                    'Warning',
+                    `Invalid value for option "${key}". `
+                    +   `Value must be of type "${validOptions[key][0]}" `
+                    +   `but was of type "${(typeof options[key])}". `
+                    +   `Defaulting value to "${validOptions[key][1]}".`
+                );
+                options[key] = validOptions[key][1];
+            }
+        }
+        
+        // Set default values for unspecified options.
+        for (const key in validOptions) {
+            if (!options.hasOwnProperty(key))
+                options[key] = validOptions[key][1];
+        }
+        
+        // - Inject app container into page and get canvas context. ------------
+        let container = document.getElementById('marblebrush');
+        if (!container) {
+            this.report(
+                'Error',
+                'Could not locate <div> with ID "marblebrush". '
+                +   'Did you add it to the page content?'
+            );
+            return;
+        }
+        
+        let containerHTML = 
+            `<div id="marblebrush-title">${options.name}</div>`
+          + '<hr>'
+          + '<canvas id="marblebrush-canvas" width="320" height="240"></canvas>'
+          + '<hr>'
+        ;
+        
+        let selectableToolNames = [
+            'pencil',
+            'bucket',
+            'save'
+        ];
+        containerHTML += '<div id="marblebrush-toolbar">';
+        for (const t of selectableToolNames ) {
+            containerHTML +=
+                '<div '
+              + 'class="marblebrush-tool" '
+              + 'style="'
+              +     `background-image:url(\'${this.APP.PATH.ICON}${t}.png\')`
+              + '" '
+              + `data-name="${t}"`
+              + '></div>'
+        }
+        containerHTML += '</div>';
+        
+        container.innerHTML = containerHTML;
+        
+        this.canvasElem = document.getElementById('marblebrush-canvas');
+        if (!this.canvasElem || this.canvasElem.nodeName !== 'CANVAS') {
+            this.report(
+                'Error',
+                'Could not locate canvas element. Previous DOM insertion may '
+                +   'have failed or <canvas> element is unsupported in this '
+                +   'browser.'
+            );
+            return;
+        }
+        this.canvas  = this.canvasElem.getContext('2d');
+        
+        // - Set up mouse-canvas interactions. ---------------------------------
+        this.canvasElem.addEventListener('mousedown', function() {
+            this.handleMouse(event);
+        }.bind(this));
+        
+        document.addEventListener('mousemove', function() {
+            this.handleMouse(event);
+        }.bind(this));
+        
+        document.addEventListener('mouseup', function() {
+            this.handleMouse(event);
+        }.bind(this));
+        
+        // - Make tool buttons clickable. --------------------------------------
+        let tools = document.getElementsByClassName('marblebrush-tool');
+        for (let i = 0; i < tools.length; i++) {
+            tools[i].addEventListener('click', function() {
+                this.switchTool(tools[i].dataset.name);
+            }.bind(this));
+        }
+        
+        // - Finish up initialization. -----------------------------------------
         this.switchTool(this.TOOLS.PENCIL);
         this.state = this.STATES.READY;
     }
     
     handleMouse(event) {
-        this.currentEvent = event;
+        this.mouse.x = event.x - this.canvasElem.getBoundingClientRect().left;
+        this.mouse.y = event.y - this.canvasElem.getBoundingClientRect().top;
         
         switch (event.type) {
             case 'mousedown':
                 if (event.button !== 0)
                     return;
                 
-                this.mouse.clicked = true;
-                this.mouse.isDown = true;
-                this.mouse.x  = this.getX();
-                this.mouse.y  = this.getY();
+                this.mouse.wasPressed = true;
+                this.mouse.isHeld = true;
                 this.mouse.lastX = this.mouse.x;
                 this.mouse.lastY = this.mouse.y;
                 
@@ -83,12 +176,10 @@ class Marblebrush {
                 
                 this.processTool();
                 
-                this.mouse.clicked = false;
+                this.mouse.wasPressed = false;
                 break;
             case 'mousemove':
-                this.mouse.x  = this.getX();
-                this.mouse.y  = this.getY();
-                if (this.mouse.isDown)
+                if (this.mouse.isHeld)
                     this.processTool();
                 this.mouse.lastX = this.mouse.x;
                 this.mouse.lastY = this.mouse.y;
@@ -96,7 +187,7 @@ class Marblebrush {
             case 'mouseup':
                 if (event.button !== 0)
                     return;
-                this.mouse.isDown = false;
+                this.mouse.isHeld = false;
                 break;
         }
     }
@@ -109,17 +200,7 @@ class Marblebrush {
         }
     }
     
-    getX() {
-        return this.currentEvent.x - this.canvasElem.getBoundingClientRect().left;
-    }
-
-    getY() {
-        return this.currentEvent.y - this.canvasElem.getBoundingClientRect().top;
-    }
-    
     switchTool(tool) {
-        // If tool is in the midst of operations, then we demand it finishes
-        // what it's doing and cleans itself up.
         if (this.state !== this.STATES.READY) {
             this.state = this.STATES.DONE;
             this.processTool();
@@ -128,15 +209,13 @@ class Marblebrush {
         this.tool = tool;
         switch (tool) {
             case this.TOOLS.PENCIL:
-                
                 break;
             case this.TOOLS.BUCKET:
-                
                 break;
         }
         
-        // Set cursor icon.
-        this.canvasElem.style.cursor = 'url("res/cursor/' + tool + '.png"), auto';
+        this.canvasElem.style.cursor =
+            `url("${this.APP.PATH.CURSOR}${tool}.png"), auto`;
     }
     
     drawLine() {
@@ -156,28 +235,14 @@ class Marblebrush {
     render() {
         
     }
-}
-
-let marblebrush = new Marblebrush();
-
-// - Add event handlers for canvas interaction. --------------------------------
-marblebrush.canvasElem.addEventListener('mousedown', function(event) {
-    marblebrush.handleMouse(event);
-});
-
-document.addEventListener('mousemove', function(event) {
-    marblebrush.handleMouse(event);
-});
-
-document.addEventListener('mouseup', function(event) {
-    marblebrush.handleMouse(event);
-});
-
-
-// - Add event handlers to the tool buttons. -----------------------------------
-let tools = document.getElementsByClassName('marblebrush-tool');
-for (let i = 0; i < tools.length; i++) {
-    tools[i].addEventListener('click', function(event) {
-        marblebrush.switchTool(this.dataset.name);
-    });
+    
+    /**
+      * Logs a message to the console.
+      *
+      * @param {string} level - The severity level (completely arbitrary).
+      * @param {string} msg   - The message to log to the console.
+      */
+    report(level, msg) {
+        console.log('MarbleBrush ' + level + ': ' + msg);
+    }
 }
