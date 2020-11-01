@@ -1,2 +1,2 @@
-# marblebrush
+# MarbleBrush
 JavaScript Painter

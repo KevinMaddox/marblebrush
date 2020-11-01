@@ -1,3 +1,12 @@
+/**
+  * MarbleBrush
+  * JavaScript painting/drawing application
+  *
+  * Wally Chantek, 2020
+  * https://github.com/wallychantek/marblebrush
+  */
+
+
 'use strict';
 if ((eval("var __temp = null"), (typeof __temp === "undefined")))
     console.log('Notice: Strict mode is enabled.');
@@ -7,16 +16,16 @@ class MarbleBrush {
     TOOLS;        // The tools available for use.
     STATES;       // The possible states that a tool can be in.
     
+    mouse;        // Contains info for mouse's positions & left-click state.
+    
     canvasElem;   // The HTML element of the canvas.
     canvas;       // The context of the canvas, for actual image operations.
-    
-    mouse;        // Contains info for mouse's positions & left-click state.
     
     tool;         // The active tool in use.
     state;        // The state of the active tool.
     
     constructor(options = {}) {
-        // - Initialize data and variables. ------------------------------------
+        // - Initialize constants. ---------------------------------------------
         this.APP = {
             VERSION: '0.3',
             PATH: {
@@ -39,22 +48,20 @@ class MarbleBrush {
             DONE:     4
         };
         
-        this.mouse = {
-            wasPressed:  false,
-            wasReleased: false,
-            isHeld:      false,
-            lastX:       0,
-            lastY:       0,
-            x:           0,
-            y:           0
-        };
-        
         // - Validate configuration options. -----------------------------------
-        // List of valid options, their types, and their default values.
+        if (typeof options !== 'object') {
+            this.report(
+                'Warning',
+                'Configuration options must be passed in as an object.'
+            );
+            options = {};
+        }
+        
         let validOptions = {
             'name': ['string' , `MarbleBrush v${this.APP.VERSION}`]
         }
         
+        // Perform validation.
         for (const key in options) {
             // Ensure key is allowed.
             if (!validOptions.hasOwnProperty(key)) {
@@ -67,9 +74,9 @@ class MarbleBrush {
                 this.report(
                     'Warning',
                     `Invalid value for option "${key}". `
-                    +   `Value must be of type "${validOptions[key][0]}" `
-                    +   `but was of type "${(typeof options[key])}". `
-                    +   `Defaulting value to "${validOptions[key][1]}".`
+                  + `Value must be of type "${validOptions[key][0]}" `
+                  + `but was of type "${(typeof options[key])}". `
+                  + `Defaulting value to "${validOptions[key][1]}".`
                 );
                 options[key] = validOptions[key][1];
             }
@@ -81,13 +88,24 @@ class MarbleBrush {
                 options[key] = validOptions[key][1];
         }
         
+        // - Initialize variables. ---------------------------------------------
+        this.mouse = {
+            wasPressed:  false,
+            wasReleased: false,
+            isHeld:      false,
+            lastX:       0,
+            lastY:       0,
+            x:           0,
+            y:           0
+        };
+        
         // - Inject app container into page and get canvas context. ------------
         let container = document.getElementById('marblebrush');
         if (!container) {
             this.report(
                 'Error',
                 'Could not locate <div> with ID "marblebrush". '
-                +   'Did you add it to the page content?'
+              + 'Did you add it to the page content?'
             );
             return;
         }
@@ -124,8 +142,8 @@ class MarbleBrush {
             this.report(
                 'Error',
                 'Could not locate canvas element. Previous DOM insertion may '
-                +   'have failed or <canvas> element is unsupported in this '
-                +   'browser.'
+              + 'have failed or <canvas> element is unsupported in this '
+              + 'browser.'
             );
             return;
         }
