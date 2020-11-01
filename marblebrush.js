@@ -58,7 +58,7 @@ class Marblebrush {
             x:           0,
             y:           0
         };
-
+        
         this.switchTool(this.TOOLS.PENCIL);
         this.state = this.STATES.READY;
     }

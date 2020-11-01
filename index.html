@@ -5,7 +5,7 @@
     <title>PAINT</title>
     <meta charset="utf-8">
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="../micawatcher/micawatcher.css">
+    <link rel="stylesheet" href="../micawatcher/src/micawatcher.css">
 </head>
 
 <body>
@@ -15,13 +15,15 @@
     </div>
 
     <script type="text/javascript" src="marblebrush.js"></script>
-    <script type="text/javascript" src="../micawatcher/micawatcher.js"></script>
+    <script type="text/javascript" src="../micawatcher/src/micawatcher.js"></script>
     <script type="text/javascript">
-        let watcher = new MicaWatcher(true, {
-            'fps': 30
+        var myCoolVar = 'cool';
+        var watcher = new MicaWatcher(true, {
+            'x': 260,
+            'height': 600
         });
-        watcher.watch(marblebrush, 'Marblebrush');
-        //watcher.toggle();
+        watcher.watch(marblebrush, 'MarbleBrush');
+        
     </script>
 </body>
 </html>
