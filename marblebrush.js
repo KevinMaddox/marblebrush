@@ -1,10 +1,17 @@
 /**
-  * MarbleBrush
-  * JavaScript painting/drawing application
-  *
-  * Wally Chantek, 2020
-  * https://github.com/wallychantek/marblebrush
-  */
+ *  _  _ ___ ___  ___  _    ___ ___  ___  _ _ ___  _   _
+ * | \/ | _ | _ || _ || |  | __| _ || _ || | | __|| |_| |
+ * | .. |   |   \| _ \| |__| _|| _ \|   \| | |__ \|  _  |
+ * |_||_|_|_|_|\_|___/|____|___|___/|_|\_|___|___/|_| |_|
+ *
+ *
+ * MarbleBrush
+ * JavaScript painting/drawing application
+ *
+ * Wally Chantek, 2020
+ * https://github.com/wallychantek/marblebrush
+ *
+**/
 
 
 'use strict';
@@ -18,8 +25,8 @@ class MarbleBrush {
     
     mouse;        // Contains info for mouse's positions & left-click state.
     
-    canvasElem;   // The HTML element of the canvas.
     canvas;       // The context of the canvas, for actual image operations.
+    elems;
     
     tool;         // The active tool in use.
     state;        // The state of the active tool.
@@ -90,14 +97,17 @@ class MarbleBrush {
         
         // - Initialize variables. ---------------------------------------------
         this.mouse = {
-            wasPressed:  false,
-            wasReleased: false,
-            isHeld:      false,
-            lastX:       0,
-            lastY:       0,
-            x:           0,
-            y:           0
+            wasPressed:   false,
+            wasReleased:  false,
+            isHeld:       false,
+            isOverCanvas: false,
+            lastX:        0,
+            lastY:        0,
+            x:            0,
+            y:            0
         };
+        
+        this.elems = {};
         
         // - Inject app container into page and get canvas context. ------------
         let container = document.getElementById('marblebrush');
@@ -111,20 +121,29 @@ class MarbleBrush {
         }
         
         let containerHTML = 
-            `<div id="marblebrush-title">${options.name}</div>`
+            `<div id="marblebrush-titlebar">${options.name}</div>`
           + '<hr>'
           + '<canvas id="marblebrush-canvas" width="320" height="240"></canvas>'
           + '<hr>'
+          + '<div id="marblebrush-toolbar"></div>'
+          + '<div id="marblebrush-statusbar">'
+          +     '<div id="marblebrush-statusbar-msg"></div>'
+          +     '<div>&nbsp;</div>'
+          +     '<div id="marblebrush-statusbar-mouse-pos"></div>'
+          + '</div>'
         ;
+        
+        container.innerHTML = containerHTML;
         
         let selectableToolNames = [
             'pencil',
             'bucket',
             'save'
         ];
-        containerHTML += '<div id="marblebrush-toolbar">';
+        
+        let toolbarHTML = '';
         for (const t of selectableToolNames ) {
-            containerHTML +=
+            toolbarHTML +=
                 '<div '
               + 'class="marblebrush-tool" '
               + 'style="'
@@ -132,25 +151,25 @@ class MarbleBrush {
               + '" '
               + `data-name="${t}"`
               + '></div>'
+            ;
         }
-        containerHTML += '</div>';
         
-        container.innerHTML = containerHTML;
+        document.getElementById('marblebrush-toolbar').innerHTML = toolbarHTML;
         
-        this.canvasElem = document.getElementById('marblebrush-canvas');
-        if (!this.canvasElem || this.canvasElem.nodeName !== 'CANVAS') {
-            this.report(
-                'Error',
-                'Could not locate canvas element. Previous DOM insertion may '
-              + 'have failed or <canvas> element is unsupported in this '
-              + 'browser.'
-            );
-            return;
-        }
-        this.canvas  = this.canvasElem.getContext('2d');
+        this.elems.canvas = document.getElementById(
+            'marblebrush-canvas'
+        );
+        this.elems.mousePosition = document.getElementById(
+            'marblebrush-statusbar-mouse-pos'
+        );
+        this.elems.statusMsg = document.getElementById(
+            'marblebrush-statusbar-msg'
+        );
         
-        // - Set up mouse-canvas interactions. ---------------------------------
-        this.canvasElem.addEventListener('mousedown', function() {
+        this.canvas  = this.elems.canvas.getContext('2d');
+        
+        // - Set up event listeners. -------------------------------------------
+        this.elems.canvas.addEventListener('mousedown', function() {
             this.handleMouse(event);
         }.bind(this));
         
@@ -162,11 +181,27 @@ class MarbleBrush {
             this.handleMouse(event);
         }.bind(this));
         
-        // - Make tool buttons clickable. --------------------------------------
+        this.elems.canvas.addEventListener('mouseover', function() {
+            this.mouse.isOverCanvas = true;
+        }.bind(this));
+        
+        this.elems.canvas.addEventListener('mouseout', function() {
+            this.mouse.isOverCanvas = false;
+        }.bind(this));
+        
         let tools = document.getElementsByClassName('marblebrush-tool');
         for (let i = 0; i < tools.length; i++) {
             tools[i].addEventListener('click', function() {
                 this.switchTool(tools[i].dataset.name);
+            }.bind(this));
+            
+            tools[i].addEventListener('mouseover', function() {
+                this.elems.statusMsg.innerHTML =
+                    this.titleCase(tools[i].dataset.name);
+            }.bind(this));
+            
+            tools[i].addEventListener('mouseout', function() {
+                this.elems.statusMsg.innerHTML = '';
             }.bind(this));
         }
         
@@ -176,8 +211,8 @@ class MarbleBrush {
     }
     
     handleMouse(event) {
-        this.mouse.x = event.x - this.canvasElem.getBoundingClientRect().left;
-        this.mouse.y = event.y - this.canvasElem.getBoundingClientRect().top;
+        this.mouse.x = event.x - this.elems.canvas.getBoundingClientRect().left;
+        this.mouse.y = event.y - this.elems.canvas.getBoundingClientRect().top;
         
         switch (event.type) {
             case 'mousedown':
@@ -201,6 +236,11 @@ class MarbleBrush {
                     this.processTool();
                 this.mouse.lastX = this.mouse.x;
                 this.mouse.lastY = this.mouse.y;
+                
+                this.elems.mousePosition.innerHTML = (this.mouse.isOverCanvas) ?
+                    `${this.mouse.x}, ${this.mouse.y}` :
+                    '';
+                
                 break;
             case 'mouseup':
                 if (event.button !== 0)
@@ -232,7 +272,7 @@ class MarbleBrush {
                 break;
         }
         
-        this.canvasElem.style.cursor =
+        this.elems.canvas.style.cursor =
             `url("${this.APP.PATH.CURSOR}${tool}.png"), auto`;
     }
     
@@ -255,12 +295,30 @@ class MarbleBrush {
     }
     
     /**
-      * Logs a message to the console.
-      *
-      * @param {string} level - The severity level (completely arbitrary).
-      * @param {string} msg   - The message to log to the console.
-      */
+     *
+     * Logs a message to the console.
+     *
+     * @param {string} level - The severity level (completely arbitrary).
+     * @param {string} msg   - The message to log to the console.
+     *
+    **/
     report(level, msg) {
         console.log('MarbleBrush ' + level + ': ' + msg);
+    }
+    
+    
+    capitalizeFirstLetter(string) {
+        return string[0].toUpperCase() + string.slice(1).toLowerCase();
+    }
+    
+    titleCase(string) {
+        if (typeof string !== 'string' || string.length === 0) {
+            report('Warning', 'Title case error.');
+            return;
+        }
+        
+        return string.split(" ").map(
+            x => this.capitalizeFirstLetter(x)
+        ).join(" ");
     }
 }
