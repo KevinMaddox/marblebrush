@@ -1,11 +1,19 @@
 - Tools
     - Pencil
-    - Rectangle shape
-    - Ellipse shape
+    - Eraser
     - Bucket
     - Line
+    - Rectangle shape
+    - Ellipse shape
     - Eyedropper
+    - Rectangular marquee
+    - Lasso marquee
+    - Hand mover/pan
+    - Magnifier
 - Functions
     - New
     - Save
     - Open
+- Various
+    - Layers
+    - Zoome
