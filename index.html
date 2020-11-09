@@ -46,7 +46,8 @@
             'x': 260,
             'height': 600
         });
-        watcher.watch(marblebrush, 'MarbleBrush');
+        watcher.watch(marblebrush._points, 'Canvas');
+        watcher.watch(marblebrush, 'MarbleBrush', true);
         
     </script>
 </body>

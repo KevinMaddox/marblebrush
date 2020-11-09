@@ -1,10 +1,14 @@
 /* TODO: Create theme setup? */
 
 #marblebrush {
-    border: 1px solid #808080;
-    width: 320px;
-    padding: 8px;
+    border: 1px solid #70758c;
     margin: 0 auto;
+    border-radius: 2px;
+    position: absolute;
+    resize: both;
+    overflow: hidden;
+    min-height: 240px;
+    min-width: 320px;
 }
 
 #marblebrush * {
@@ -16,9 +20,25 @@
     user-select: none;
 }
 
+#marblebrush-title-bar {
+    background: linear-gradient(to right, #c3ecf7 0%,#afaee5 100%);
+    border-bottom: 1px solid #70758c;
+    padding: 4px;
+    font-weight: bold;
+}
+
+#marblebrush-canvas-container {
+    padding: 4px;
+}
+
 #marblebrush-canvas {
     background: #e8e8e8;
     display: block;
+    background: #c0c0c0;
+}
+
+#marblebrush-canvas canvas {
+    position: absolute;
 }
 
 #marblebrush-toolbar {
