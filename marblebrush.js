@@ -139,6 +139,39 @@ class _mbLayeredCanvas {
         }
         
         
+        // this.canvas.fillStyle = '#000000';
+        // var steep = (Math.abs(y2 - y1) > Math.abs(x2 - x1));
+        // let dx = x2 - x1;
+        // let dy = y2 - y1;
+        // let steps = 0;
+        // if (Math.abs(dx) > Math.abs(dy))
+            // steps = Math.abs(dx);
+        // else
+            // steps = Math.abs(dy);
+        
+        // let incrementX = dx / steps;
+        // let incrementY = dy / steps;
+        
+        // let x = x1;
+        // let y = y1;
+        
+        // for (let v = 0; v < steps; v++)
+        // {
+            // x = x + incrementX;
+            // y = y + incrementY;
+            // this._layers[this._activeLayer].ctx.fillRect(Math.round(x), Math.round(y), 2, 2);
+        // }
+        
+        /* Drawing start & end points */
+        // this._layers[this._activeLayer].ctx.fillStyle = 'rgba(1, 0, 0, 1)';
+        // if (!steep) {
+            // this._layers[this._activeLayer].ctx.fillRect(x1, y1, 2, 2);
+            // this._layers[this._activeLayer].ctx.fillRect(x2, y2, 2, 2);
+        // }
+        // else {
+            // this._layers[this._activeLayer].ctx.fillRect(y1, x1, 2, 2);
+            // this._layers[this._activeLayer].ctx.fillRect(y2, x2, 2, 2);
+        // }
         
         
         
